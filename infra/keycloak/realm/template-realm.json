@@ -1,0 +1,42 @@
+{
+  "realm": "template",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "template-api",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "template-api-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    },
+    {
+      "clientId": "template-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "template-service-secret",
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "admin" },
+      { "name": "user" }
+    ]
+  },
+  "users": [
+    {
+      "username": "template-user",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "template-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ]
+}
