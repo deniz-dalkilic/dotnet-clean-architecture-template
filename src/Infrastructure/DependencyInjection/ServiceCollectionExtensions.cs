@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
         services.Configure<RedisCacheOptions>(configuration.GetSection(RedisCacheOptions.SectionName));
         services.AddSingleton<IConnectionMultiplexer>(_ =>

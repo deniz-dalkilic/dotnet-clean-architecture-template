@@ -5,7 +5,7 @@ using Template.Domain.Entities;
 namespace Template.Infrastructure.Data;
 
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : DbContext(options), IApplicationDbContext
+    : DbContext(options), IAppDbContext
 {
     public DbSet<TodoItem> TodoItems => Set<TodoItem>();
 

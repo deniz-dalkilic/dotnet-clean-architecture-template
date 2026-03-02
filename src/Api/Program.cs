@@ -4,6 +4,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
 using Template.Application.Features.Health;
+using Template.Application.UseCases.AppInfo;
 using Template.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetHealthService>();
+builder.Services.AddScoped<GetAppInfoService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -64,6 +66,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGet("/health", (GetHealthService service) => Results.Ok(service.Execute()));
+app.MapGet("/app-info", (GetAppInfoService service) => Results.Ok(service.Execute()));
 app.MapGet("/secure", () => Results.Ok("Protected endpoint")).RequireAuthorization();
 
 app.Run();
