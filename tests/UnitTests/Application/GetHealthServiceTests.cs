@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Template.Application.Features.Health;
+using Xunit;
 
 namespace Template.UnitTests.Application;
 

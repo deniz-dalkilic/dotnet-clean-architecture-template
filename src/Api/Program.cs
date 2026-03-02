@@ -3,6 +3,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 using Template.Application.Features.Health;
 using Template.Application.UseCases.AppInfo;
 using Template.Infrastructure.DependencyInjection;

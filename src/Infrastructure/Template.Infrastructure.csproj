@@ -9,6 +9,7 @@
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="Quartz" />
+    <PackageReference Include="Quartz.Extensions.Hosting" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 </Project>

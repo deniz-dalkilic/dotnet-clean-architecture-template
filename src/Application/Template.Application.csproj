@@ -3,6 +3,7 @@
     <ProjectReference Include="../Domain/Template.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="FluentValidation" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+using Quartz;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;

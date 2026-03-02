@@ -21,7 +21,10 @@ public sealed class InfrastructureContainersFixture : IAsyncLifetime
 
     public KeycloakContainer Keycloak { get; } = new KeycloakBuilder()
         .WithImage("quay.io/keycloak/keycloak:26.0")
-        .WithRealmImportFile("infra/keycloak/realm/template-realm.json")
+        .WithResourceMapping(
+            "infra/keycloak/realm/template-realm.json",
+            "/opt/keycloak/data/import/template-realm.json")
+        .WithCommand("start-dev", "--import-realm")
         .Build();
 
     public async Task InitializeAsync()
