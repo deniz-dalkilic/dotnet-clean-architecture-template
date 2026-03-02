@@ -3,8 +3,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Sinks.Grafana.Loki;
-using Template.Application.Features.Health;
+using Template.Api.Endpoints;
 using Template.Application.UseCases.AppInfo;
 using Template.Infrastructure.DependencyInjection;
 
@@ -18,13 +17,14 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .Enrich.FromLogContext()
         .Enrich.WithEnvironmentName()
         .Enrich.WithThreadId()
-        .WriteTo.Console()
-        .WriteTo.GrafanaLoki(context.Configuration["Loki:Uri"] ?? "http://localhost:3100");
+        .WriteTo.Console();
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<GetHealthService>();
 builder.Services.AddScoped<GetAppInfoService>();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -55,6 +55,8 @@ builder.Services.AddOpenTelemetry()
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -66,8 +68,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/health", (GetHealthService service) => Results.Ok(service.Execute()));
-app.MapGet("/app-info", (GetAppInfoService service) => Results.Ok(service.Execute()));
+app.MapHealthEndpoints();
+app.MapAppInfoEndpoints();
 app.MapGet("/secure", () => Results.Ok("Protected endpoint")).RequireAuthorization();
 
 app.Run();
