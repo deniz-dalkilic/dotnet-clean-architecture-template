@@ -5,7 +5,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="Quartz.Extensions.DependencyInjection" />
+    <PackageReference Include="Quartz" />
     <PackageReference Include="Quartz.Extensions.Hosting" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
