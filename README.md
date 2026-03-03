@@ -36,14 +36,18 @@ See `docs/architecture/ADR-0001-clean-architecture.md` for the baseline dependen
 cp infra/.env.example infra/.env
 ```
 
-2. Start core dependencies + Keycloak:
+2. Start core dependencies:
 
 ```bash
-docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/docker-compose.keycloak.yml up -d
+docker compose --env-file infra/.env -f infra/docker-compose.core.yml up -d
 ```
 
 3. Optionally add observability stack:
 
 ```bash
-docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/docker-compose.keycloak.yml -f infra/docker-compose.observability.yml up -d
+docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/docker-compose.observability.yml up -d
 ```
+
+## Authentication approach
+
+This template does not include a bundled identity provider. Use an external OpenID Connect/OAuth 2.0 provider and apply an **External Id Token Exchange** pattern for service-to-service calls. See `docs/architecture/authentication.md` for details.
