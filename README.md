@@ -27,3 +27,23 @@ A pragmatic .NET clean architecture template with explicit use-cases and infrast
 ## Architectural direction
 
 See `docs/architecture/ADR-0001-clean-architecture.md` for the baseline dependency rule and rationale for keeping use-cases explicit without mediator by default.
+
+## Local infrastructure with Docker Compose
+
+1. Copy the sample environment file and adjust values if needed:
+
+```bash
+cp infra/.env.example infra/.env
+```
+
+2. Start core dependencies + Keycloak:
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/docker-compose.keycloak.yml up -d
+```
+
+3. Optionally add observability stack:
+
+```bash
+docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/docker-compose.keycloak.yml -f infra/docker-compose.observability.yml up -d
+```

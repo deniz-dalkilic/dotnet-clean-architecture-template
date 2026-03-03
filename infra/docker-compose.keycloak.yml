@@ -1,0 +1,58 @@
+name: template
+
+services:
+  keycloak-db:
+    image: postgres:17-alpine
+    container_name: template-keycloak-postgres
+    environment:
+      POSTGRES_DB: ${KC_POSTGRES_DB:-keycloak}
+      POSTGRES_USER: ${KC_POSTGRES_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KC_POSTGRES_PASSWORD:-keycloak-change}
+    volumes:
+      - template_keycloak_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - template-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    container_name: template-keycloak
+    command: ["start-dev", "--import-realm"]
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123-change}
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: ${KC_POSTGRES_DB:-keycloak}
+      KC_DB_USERNAME: ${KC_POSTGRES_USER:-keycloak}
+      KC_DB_PASSWORD: ${KC_POSTGRES_PASSWORD:-keycloak-change}
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY_HEADERS: "xforwarded"
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    networks:
+      - template-net
+
+networks:
+  template-net:
+    name: template-net
+
+volumes:
+  template_keycloak_postgres_data:

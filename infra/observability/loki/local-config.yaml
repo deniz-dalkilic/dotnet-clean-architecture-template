@@ -3,6 +3,9 @@ server:
   http_listen_port: 3100
 common:
   path_prefix: /loki
+  ring:
+    kvstore:
+      store: inmemory
   storage:
     filesystem:
       chunks_directory: /loki/chunks

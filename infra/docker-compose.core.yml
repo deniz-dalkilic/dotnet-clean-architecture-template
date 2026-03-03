@@ -1,0 +1,82 @@
+name: template
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: template-postgres
+    environment:
+      POSTGRES_DB: ${APP_POSTGRES_DB:-template}
+      POSTGRES_USER: ${APP_POSTGRES_USER:-template}
+      POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD:-template-change}
+    ports:
+      - "${APP_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - template_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - template-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: template-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - template_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - template-net
+
+  # Valkey (Redis drop-in) alternatifi:
+  # valkey:
+  #   image: valkey/valkey:8-alpine
+  #   container_name: template-valkey
+  #   ports:
+  #     - "${REDIS_PORT:-6379}:6379"
+  #   volumes:
+  #     - template_redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "valkey-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 20
+  #   networks:
+  #     - template-net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: template-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - template_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - template-net
+
+networks:
+  template-net:
+    name: template-net
+
+volumes:
+  template_postgres_data:
+  template_redis_data:
+  template_rabbitmq_data:
