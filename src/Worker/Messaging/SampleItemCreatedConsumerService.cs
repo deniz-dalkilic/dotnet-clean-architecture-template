@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -112,6 +113,13 @@ public sealed class SampleItemCreatedConsumerService : BackgroundService
         var consumer = new AsyncEventingBasicConsumer(channel);
         consumer.ReceivedAsync += async (_, ea) =>
         {
+            using var activity = MessagingActivitySource.Instance.StartActivity("rabbitmq.consume", ActivityKind.Consumer);
+            activity?.SetTag("messaging.system", "rabbitmq");
+            activity?.SetTag("messaging.destination.name", _options.Exchange);
+            activity?.SetTag("messaging.destination.kind", "queue");
+            activity?.SetTag("messaging.rabbitmq.routing_key", ea.RoutingKey);
+            activity?.SetTag("messaging.operation", "process");
+
             var body = Encoding.UTF8.GetString(ea.Body.ToArray());
             _logger.LogInformation("Received {RoutingKey} event payload: {Payload}", ea.RoutingKey, body);
             await channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: ct);

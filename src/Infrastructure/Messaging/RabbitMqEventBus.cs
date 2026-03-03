@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,14 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
 
         await ExecuteWithRetryAsync(async attempt =>
         {
+            using var activity = MessagingActivitySource.Instance.StartActivity("rabbitmq.publish", ActivityKind.Producer);
+            activity?.SetTag("messaging.system", "rabbitmq");
+            activity?.SetTag("messaging.destination.name", _options.Exchange);
+            activity?.SetTag("messaging.destination.kind", "exchange");
+            activity?.SetTag("messaging.rabbitmq.routing_key", routingKey);
+            activity?.SetTag("messaging.operation", "publish");
+            activity?.SetTag("messaging.message.type", typeof(T).Name);
+
             var factory = CreateFactory();
             await using var connection = await factory.CreateConnectionAsync(ct);
             await using var channel = await connection.CreateChannelAsync(cancellationToken: ct);
