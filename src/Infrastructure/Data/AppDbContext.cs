@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Template.Application.Abstractions;
+using Template.Domain.Common;
 using Template.Domain.Entities;
 using Template.Infrastructure.Data.Configurations;
 
@@ -15,6 +16,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Ignore<DomainEvent>();
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

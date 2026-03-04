@@ -4,14 +4,31 @@ using Template.Domain.Entities;
 
 namespace Template.Application.Auth;
 
-public sealed class ExternalSignInService(
-    IExternalIdTokenValidator idTokenValidator,
-    IExternalIdentityRepository externalIdentityRepository,
-    IUserRepository userRepository,
-    IRefreshTokenService refreshTokenService,
-    IOptions<RefreshTokenOptions> refreshTokenOptions,
-    IUnitOfWork unitOfWork)
+public sealed class ExternalSignInService
 {
+    private readonly IExternalIdTokenValidator _idTokenValidator;
+    private readonly IExternalIdentityRepository _externalIdentityRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IOptions<RefreshTokenOptions> _refreshTokenOptions;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public ExternalSignInService(
+        IExternalIdTokenValidator idTokenValidator,
+        IExternalIdentityRepository externalIdentityRepository,
+        IUserRepository userRepository,
+        IRefreshTokenService refreshTokenService,
+        IOptions<RefreshTokenOptions> refreshTokenOptions,
+        IUnitOfWork unitOfWork)
+    {
+        _idTokenValidator = idTokenValidator;
+        _externalIdentityRepository = externalIdentityRepository;
+        _userRepository = userRepository;
+        _refreshTokenService = refreshTokenService;
+        _refreshTokenOptions = refreshTokenOptions;
+        _unitOfWork = unitOfWork;
+    }
+
     public const string DefaultRole = "template-user";
 
     public async Task<ExternalSignInResult> SignInAsync(
@@ -20,12 +37,12 @@ public sealed class ExternalSignInService(
         string? expectedNonce,
         CancellationToken cancellationToken)
     {
-        var payload = await idTokenValidator.ValidateAsync(provider, idToken, expectedNonce, cancellationToken);
+        var payload = await _idTokenValidator.ValidateAsync(provider, idToken, expectedNonce, cancellationToken);
 
-        var externalIdentity = await externalIdentityRepository.FindAsync(provider, payload.Subject, cancellationToken);
+        var externalIdentity = await _externalIdentityRepository.FindAsync(provider, payload.Subject, cancellationToken);
         if (externalIdentity is not null)
         {
-            var existingUser = await userRepository.GetByIdAsync(externalIdentity.UserId, cancellationToken)
+            var existingUser = await _userRepository.GetByIdAsync(externalIdentity.UserId, cancellationToken)
                 ?? throw new InvalidOperationException("External identity is linked to a missing user.");
 
             var existingRefreshToken = await IssueRefreshTokenAsync(existingUser.Id, cancellationToken);
@@ -34,12 +51,12 @@ public sealed class ExternalSignInService(
 
         // Intentionally does not auto-link by email to prevent account takeover scenarios.
         var user = new User(BuildDisplayName(payload), payload.Email);
-        userRepository.Add(user);
+        _userRepository.Add(user);
 
         var identity = new ExternalIdentity(user.Id, provider, payload.Subject, payload.Email);
-        externalIdentityRepository.Add(identity);
+        _externalIdentityRepository.Add(identity);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var refreshToken = await IssueRefreshTokenAsync(user.Id, cancellationToken);
         return new ExternalSignInResult(user, [DefaultRole], payload, refreshToken);
@@ -47,12 +64,12 @@ public sealed class ExternalSignInService(
 
     private async Task<RefreshTokenResult?> IssueRefreshTokenAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (!refreshTokenOptions.Value.Enabled)
+        if (!_refreshTokenOptions.Value.Enabled)
         {
             return null;
         }
 
-        return await refreshTokenService.IssueAsync(userId, cancellationToken);
+        return await _refreshTokenService.IssueAsync(userId, cancellationToken);
     }
 
     private static string BuildDisplayName(ExternalIdentityPayload payload)
