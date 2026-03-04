@@ -51,3 +51,16 @@ docker compose --env-file infra/.env -f infra/docker-compose.core.yml -f infra/d
 ## Authentication approach
 
 This template does not include a bundled identity provider. Use an external OpenID Connect/OAuth 2.0 provider and apply an **External Id Token Exchange** pattern for service-to-service calls. See `docs/architecture/authentication.md` for details.
+
+## Quickstart (auth configuration)
+
+Before running the API with external login enabled, configure these environment variables:
+
+- `ExternalAuth__Providers__Google__ClientId`
+- `ExternalAuth__Providers__Microsoft__ClientId`
+- `ExternalAuth__Providers__Apple__ClientId`
+- `Jwt__Issuer`
+- `Jwt__Audience`
+- `Jwt__SigningKey`
+
+You can place these in your local environment, `appsettings.Development.json`, or Docker env file depending on your workflow.

@@ -30,37 +30,30 @@ public static class AuthEndpoints
                     detail: "Supported providers are google, microsoft, and apple.");
             }
 
-            try
-            {
-                var signInResult = await signInService.SignInAsync(parsedProvider, request.IdToken, request.Nonce, cancellationToken);
-                var lifetime = TimeSpan.FromMinutes(jwtOptions.Value.LifetimeMinutes);
-                var accessToken = tokenIssuer.IssueAccessToken(
-                    signInResult.User,
-                    signInResult.Roles,
-                    lifetime,
-                    new Dictionary<string, string>
-                    {
-                        ["idp"] = ToProviderClaim(parsedProvider)
-                    });
+            var signInResult = await signInService.SignInAsync(parsedProvider, request.IdToken, request.Nonce, cancellationToken);
+            var lifetime = TimeSpan.FromMinutes(jwtOptions.Value.LifetimeMinutes);
+            var accessToken = tokenIssuer.IssueAccessToken(
+                signInResult.User,
+                signInResult.Roles,
+                lifetime,
+                new Dictionary<string, string>
+                {
+                    ["idp"] = ToProviderClaim(parsedProvider)
+                });
 
-                return Results.Ok(new ExternalSignInResponse(
-                    accessToken,
-                    (int)lifetime.TotalSeconds,
-                    signInResult.RefreshToken?.Token,
-                    signInResult.RefreshToken?.ExpiresAtUtc,
-                    new UserResponse(signInResult.User.Id, signInResult.User.Email, signInResult.User.DisplayName),
-                    signInResult.Roles));
-            }
-            catch (ExternalAuthValidationException ex)
-            {
-                return Results.Problem(
-                    statusCode: StatusCodes.Status400BadRequest,
-                    title: "Invalid external token.",
-                    detail: ex.Message);
-            }
+            return Results.Ok(new ExternalSignInResponse(
+                accessToken,
+                (int)lifetime.TotalSeconds,
+                signInResult.RefreshToken?.Token,
+                signInResult.RefreshToken?.ExpiresAtUtc,
+                new UserResponse(signInResult.User.Id, signInResult.User.Email, signInResult.User.DisplayName),
+                signInResult.Roles));
         })
         .WithTags("Auth")
-        .WithSummary("Exchanges an external ID token for an internal access token.");
+        .WithSummary("Exchanges an external ID token for an internal access token.")
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         endpoints.MapGet("/api/me", (ClaimsPrincipal user) =>
         {

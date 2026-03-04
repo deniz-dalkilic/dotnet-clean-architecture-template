@@ -11,6 +11,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Sinks.Grafana.Loki;
 using Template.Api.Endpoints;
+using Template.Api.Exceptions;
 using Template.Api.Middleware;
 using Template.Api.Observability;
 using Template.Application.UseCases.AppInfo;
@@ -49,6 +50,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<GetAppInfoService>();
 
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>(name: "postgres");
 

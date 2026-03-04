@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Template.Application.Abstractions;
 using Template.Application.Auth;
+using Template.Application.Exceptions;
 using Template.Domain.Entities;
 
 namespace Template.Infrastructure.Auth;
