@@ -9,11 +9,14 @@ using Template.Infrastructure.Caching;
 using Template.Infrastructure.Data;
 using Template.Infrastructure.Messaging;
 using Template.Infrastructure.Data.Repositories;
+using Template.Infrastructure.Resilience;
 
 namespace Template.Infrastructure.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
+    public const string OidcDiscoveryHttpClientName = "oidc-discovery";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
@@ -66,6 +69,11 @@ public static class ServiceCollectionExtensions
             configuration.GetSection(KeycloakClientCredentialsOptions.SectionName).Bind(options);
             return options;
         });
+        services.AddHttpClient(ServiceCollectionExtensions.OidcDiscoveryHttpClientName)
+            .AddPolicyHandler(HttpResiliencePolicies.TimeoutPolicy)
+            .AddPolicyHandler(HttpResiliencePolicies.RetryWithJitterPolicy)
+            .AddPolicyHandler(HttpResiliencePolicies.CircuitBreakerPolicy);
+
         services.AddHttpClient<ServiceTokenProvider>();
 
         return services;

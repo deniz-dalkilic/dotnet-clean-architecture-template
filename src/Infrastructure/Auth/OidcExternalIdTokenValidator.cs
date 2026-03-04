@@ -7,12 +7,15 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Template.Application.Abstractions;
 using Template.Application.Auth;
+using Template.Infrastructure.DependencyInjection;
 using Template.Application.Exceptions;
 using Template.Domain.Entities;
 
 namespace Template.Infrastructure.Auth;
 
-public sealed class OidcExternalIdTokenValidator(IOptions<ExternalAuthOptions> options) : IExternalIdTokenValidator
+public sealed class OidcExternalIdTokenValidator(
+    IOptions<ExternalAuthOptions> options,
+    IHttpClientFactory httpClientFactory) : IExternalIdTokenValidator
 {
     private static readonly ConcurrentDictionary<ExternalAuthProvider, ConfigurationManager<OpenIdConnectConfiguration>> ConfigurationManagers = new();
 
@@ -145,17 +148,17 @@ public sealed class OidcExternalIdTokenValidator(IOptions<ExternalAuthOptions> o
         {
             ExternalAuthProvider.Google => new ProviderConfiguration(
                 _options.Providers.Google.ClientId,
-                GetOrCreateConfigurationManager(provider, _options.GoogleDiscoveryUrl),
+                GetOrCreateConfigurationManager(provider, _options.GoogleDiscoveryUrl, httpClientFactory),
                 ["https://accounts.google.com", "accounts.google.com"]),
 
             ExternalAuthProvider.Microsoft => new ProviderConfiguration(
                 _options.Providers.Microsoft.ClientId,
-                GetOrCreateConfigurationManager(provider, GetMicrosoftDiscoveryUrl()),
+                GetOrCreateConfigurationManager(provider, GetMicrosoftDiscoveryUrl(), httpClientFactory),
                 []),
 
             ExternalAuthProvider.Apple => new ProviderConfiguration(
                 _options.Providers.Apple.ClientId,
-                GetOrCreateConfigurationManager(provider, _options.AppleDiscoveryUrl),
+                GetOrCreateConfigurationManager(provider, _options.AppleDiscoveryUrl, httpClientFactory),
                 ["https://appleid.apple.com"]),
 
             _ => throw new ExternalAuthValidationException("Unsupported external auth provider.")
@@ -173,13 +176,17 @@ public sealed class OidcExternalIdTokenValidator(IOptions<ExternalAuthOptions> o
 
     private static ConfigurationManager<OpenIdConnectConfiguration> GetOrCreateConfigurationManager(
         ExternalAuthProvider provider,
-        string discoveryUrl)
+        string discoveryUrl,
+        IHttpClientFactory httpClientFactory)
     {
         return ConfigurationManagers.GetOrAdd(provider, _ =>
             new ConfigurationManager<OpenIdConnectConfiguration>(
                 discoveryUrl,
                 new OpenIdConnectConfigurationRetriever(),
-                new HttpDocumentRetriever { RequireHttps = true }));
+                new HttpDocumentRetriever(httpClientFactory.CreateClient(ServiceCollectionExtensions.OidcDiscoveryHttpClientName))
+                {
+                    RequireHttps = true
+                }));
     }
 
     private sealed record ProviderConfiguration(
